@@ -47,29 +47,16 @@ export class AuthService {
 
   getUser(): Observable<Response> {
     return new Observable((observer) => {
-      if (localStorage) {
+      chrome.storage.local.get('authenticated-email', (result) => {
         const results = _.filter(this.users, function(item) {
-          return (
-            item.email.indexOf(localStorage.getItem('authenticated-email')) > -1
-          );
+          return item.email.indexOf(result['authenticated-email']) > -1;
         });
 
         observer.next({
           status: !!results[0],
           data: results[0]
         });
-      } else {
-        chrome.storage.local.get('authenticated-email', (result) => {
-          const results = _.filter(this.users, function(item) {
-            return item.email.indexOf(result['authenticated-email']) > -1;
-          });
-
-          observer.next({
-            status: !!results[0],
-            data: results[0]
-          });
-        });
-      }
+      });
     });
   }
 
@@ -84,21 +71,13 @@ export class AuthService {
         !results[0].deleted &&
         results[0].emailVerified
       ) {
-        if (localStorage) {
-          localStorage.setItem('authenticated-email', email);
-        } else {
-          chrome.storage.local.set({ 'authenticated-email': email });
-        }
+        chrome.storage.local.set({ 'authenticated-email': email });
 
         observer.next({
           status: true
         });
       } else if (results[0].deleted) {
-        if (localStorage) {
-          localStorage.setItem('authenticated-email', email);
-        } else {
-          chrome.storage.local.set({ 'authenticated-email': email });
-        }
+        chrome.storage.local.set({ 'authenticated-email': email });
 
         observer.next({
           status: false,
@@ -170,11 +149,7 @@ export class AuthService {
 
   signOut(): Observable<Response> {
     return new Observable((observer) => {
-      if (localStorage) {
-        localStorage.removeItem('authenticated-email');
-      } else {
-        chrome.storage.local.remove('authenticated-email');
-      }
+      chrome.storage.local.remove('authenticated-email');
 
       observer.next({
         status: true

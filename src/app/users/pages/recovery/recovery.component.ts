@@ -17,19 +17,12 @@ export class RecoveryComponent implements OnInit {
   };
 
   constructor(private router: Router, private auth: AuthService) {
-    if (localStorage) {
-      this.authEmail = localStorage.getItem('authenticated-email');
+    chrome.storage.local.get('authenticated-email', (result) => {
+      this.authEmail = result['authenticated-email'];
       if (!this.authEmail) {
         this.router.navigate(['/']);
       }
-    } else {
-      chrome.storage.local.get('authenticated-email', (result) => {
-        this.authEmail = result['authenticated-email'];
-        if (!this.authEmail) {
-          this.router.navigate(['/']);
-        }
-      });
-    }
+    });
   }
 
   ngOnInit() {}
