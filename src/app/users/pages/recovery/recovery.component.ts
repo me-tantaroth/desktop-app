@@ -17,9 +17,18 @@ export class RecoveryComponent implements OnInit {
   };
 
   constructor(private router: Router, private auth: AuthService) {
-    this.authEmail = window.localStorage.getItem('authenticated-email');
-    if (!this.authEmail) {
-      this.router.navigate(['/']);
+    if (localStorage) {
+      this.authEmail = localStorage.getItem('authenticated-email');
+      if (!this.authEmail) {
+        this.router.navigate(['/']);
+      }
+    } else {
+      chrome.storage.local.get('authenticated-email', (result) => {
+        this.authEmail = result['authenticated-email'];
+        if (!this.authEmail) {
+          this.router.navigate(['/']);
+        }
+      });
     }
   }
 
@@ -32,7 +41,7 @@ export class RecoveryComponent implements OnInit {
         this.message = {
           show: true,
           label: 'Info',
-          sublabel: `Se ha enviado un correo a ${ email } para recuperar tu cuenta`,
+          sublabel: `Se ha enviado un correo a ${email} para recuperar tu cuenta`,
           color: 'accent',
           icon: 'info'
         };

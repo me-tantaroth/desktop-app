@@ -26,15 +26,14 @@ export class AuthService {
   get authenticated(): Observable<boolean> {
     return new Observable((observer) => {
       this.getUser().subscribe((response) => {
-        console.log('Status', response.status);
         if (response.status) {
-          console.log(response.data, response.data.blocked, response.data.deleted);
-          if (response.data && (response.data.blocked || response.data.deleted)) {
-            console.log('>> true');
+          if (
+            response.data &&
+            (response.data.blocked || response.data.deleted)
+          ) {
             observer.next(false);
             observer.complete();
           } else {
-            console.log('>> false');
             observer.next(true);
             observer.complete();
           }
@@ -47,17 +46,30 @@ export class AuthService {
   }
 
   getUser(): Observable<Response> {
-    const results = _.filter(this.users, function(item) {
-      return (
-        item.email.indexOf(window.localStorage.getItem('authenticated-email')) >
-        -1
-      );
-    });
     return new Observable((observer) => {
-      observer.next({
-        status: !!results[0],
-        data: results[0]
-      });
+      if (localStorage) {
+        const results = _.filter(this.users, function(item) {
+          return (
+            item.email.indexOf(localStorage.getItem('authenticated-email')) > -1
+          );
+        });
+
+        observer.next({
+          status: !!results[0],
+          data: results[0]
+        });
+      } else {
+        chrome.storage.local.get('authenticated-email', (result) => {
+          const results = _.filter(this.users, function(item) {
+            return item.email.indexOf(result['authenticated-email']) > -1;
+          });
+
+          observer.next({
+            status: !!results[0],
+            data: results[0]
+          });
+        });
+      }
     });
   }
 
@@ -72,13 +84,22 @@ export class AuthService {
         !results[0].deleted &&
         results[0].emailVerified
       ) {
-        window.localStorage.setItem('authenticated-email', email);
+        if (localStorage) {
+          localStorage.setItem('authenticated-email', email);
+        } else {
+          chrome.storage.local.set({ 'authenticated-email': email });
+        }
 
         observer.next({
           status: true
         });
       } else if (results[0].deleted) {
-        window.localStorage.setItem('authenticated-email', email);
+        if (localStorage) {
+          localStorage.setItem('authenticated-email', email);
+        } else {
+          chrome.storage.local.set({ 'authenticated-email': email });
+        }
+
         observer.next({
           status: false,
           error: {
@@ -149,7 +170,11 @@ export class AuthService {
 
   signOut(): Observable<Response> {
     return new Observable((observer) => {
-      window.localStorage.removeItem('authenticated-email');
+      if (localStorage) {
+        localStorage.removeItem('authenticated-email');
+      } else {
+        chrome.storage.local.remove('authenticated-email');
+      }
 
       observer.next({
         status: true
