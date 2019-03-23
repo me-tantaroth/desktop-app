@@ -1,7 +1,5 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
 
 import { HomeComponent, NotFoundComponent } from './pages';
 
@@ -12,11 +10,11 @@ const routes: Routes = [
   },
   {
     path: 'auth',
-    loadChildren: () => AuthModule
+    loadChildren: './auth/auth.module#AuthModule'
   },
   {
     path: 'user',
-    loadChildren: () => UsersModule
+    loadChildren: './users/users.module#UsersModule'
   },
   {
     path: 'not-found',
@@ -29,7 +27,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { useHash: true })],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}
